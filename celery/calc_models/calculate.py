@@ -16,15 +16,16 @@ def parallel_operations(duration, a, b):
 
     # Different ways of doing parallel computing - that is tested and works:
     # joblib out of the box:
-    # r = Parallel(n_jobs=-1)(delayed(_calculate)(o, a, b, duration) for o in operations)
+    r = Parallel(n_jobs=-1)(delayed(_calculate)(o, a, b, duration) for o in operations)
 
     # joblib and threading:
     # with parallel_backend('threading'):
     #    r = Parallel(n_jobs=-1)(delayed(_calculate)(o, a, b, duration) for o in operations)
 
-    # Using multiprocessing pool:
-    with Pool() as p:
-        r = p.map(partial(_calculate, duration=duration, a=a, b=b), operations)
+    # NOT WORKING: Using multiprocessing pool, get:
+    # TypeError: Pickling an AuthenticationString object is disallowed for security reasons
+    # with Pool() as p:
+    #     r = p.map(partial(_calculate, duration=duration, a=a, b=b), operations)
 
     return str({i[0]:i[1] for i in zip(operations, r)})
 
