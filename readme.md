@@ -60,6 +60,21 @@ curl -X 'POST' \
 }'
 ```
 
+## Virtual environment - conda
+
+In the root of the project there is a environment file (`environment.yml`). To create a conda virtual environment you only have to write
+
+```bash
+conda evn create
+```
+
+to have the virtual environement set up. Then activate with:
+
+```bash
+conda activate py310_gen_api
+```
+
+
 ## Project folders and files
 
 ```bash
