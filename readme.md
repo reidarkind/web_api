@@ -274,6 +274,7 @@ The file `./redis/redis.conf` is added so that you can add custom configs. The f
 ## Security
 
 First of all; I'm not a security expert. But some things worth mentioning...
+
 ### Non-root users
 
 Non-root users are running the services in the docker files, according to [this post](https://medium.com/@mccode/processes-in-containers-should-not-run-as-root-2feae3f0df3b).
@@ -311,11 +312,8 @@ In dev everything is exposed to the host, for debugging purposes.
 
 ## Considerations
 
-* Consider to shange Dockerfile(s) so that pip install is not done by root, but instead create a virtual environment and install as normal user - less chance of messing up any python dependencies already in the image.
+* Consider to change Dockerfile(s) so that pip install is not done by root, but instead create a virtual environment and install as normal user - less chance of messing up any python dependencies already in the image.
 * Add ngingx on top of Gunicorn and add some ssl (https).
 * Consider Redis Persistence to keep results, even though the service goes down: [](https://redis.io/topics/persistence)
 * Consider adding different networks for the different services (nginx in front; api and flower in middle; redis and celery_worker in back)
 
-## TODO (or consider)
-
-* [ ] Finish this md
