@@ -42,7 +42,7 @@ This will start 4 services;
 
 After all services is up, you can go to
 
-* [http://localhost/docs]() to read the automatic generated Swagger documentation and make requests to the
+* [http://localhost:8080/docs]() to read the automatic generated Swagger documentation and make requests to the
 REST api endpoints
 * [http://localhost:5555]() to monitor the backend, pending tasks etc.
 * Do a request by using curl (tip: open your Git Bash - there you have curl) with:
@@ -102,32 +102,66 @@ gen_api
         Services.PNG                      --> image embedded in this readme.md
 ```
 
-## FastAPI - the endpoints
 
-
-## Celery - Multiprocessing
-
-## Docker compose - different environments
-
-## Redis - Warnings and binding
-When using the official image `redis:6.2-alpine` out of the box one get some warnings:
->WARNING overcommit_memory is set to 0! Background save may fail under low memory condition.
-
-The files `./redis/init.sh` and `./redis/.sysctl.conf` handles this and sets `vm.overcommit_memory=1`.
-
->Warning: no config file specified, using the default config.
-
-The file `./redis/redis.conf` is added so that you can add custom configs. The file used is the same as [this one](https://raw.githubusercontent.com/redis/redis/6.2/redis.conf).
-
-
-
-## <a id="Architecture"> Architecture </a>
+## Architecture
 
 The following picture describes the flow between services:
 
 ![Architecture](./_misc/Services.PNG)
 
-## Theres a makefile here!
+## FastAPI - the endpoints
+
+You can open (in dev) `http://localhost:8080/docs` to see what end points are available and their full documentation, with possibility to try out the end points. I'll look something like this:
+
+![Endpoints](./_misc/Endpoints.PNG)
+
+This project contains 4 end-points:
+
+* __POST__ **/start_simple_task** Starts a task that is calculated without any multiprocessing. Returns full response scheme:
+* __POST__ **/start_parallel_task** Starts a task that calculates several relationships between two numbers, _a_ and _b_, in parallel (multiprocessing)
+* __GET__ **/status/{id}** Returns full response scheme for a specific id
+* __GET__ **/result/{id}** Returns only either result if success or status on job if not, from the response scheme.
+
+### Full response scheme
+
+```json
+{
+  "status": "string",
+  "result": "string",
+  "task_id": "string",
+  "full_traceback": "string",
+  "url": "string"
+}
+```
+
+### Input scheme
+
+The two __POST__ endpoints get data through this scheme:
+
+```json
+{
+  "duration": 0,
+  "a": 0,
+  "b": 0,
+  "wait": 0
+}
+```
+To mimic a heavy calculation the `duration` argument defines how long the calculation should take (using `time.sleep(duration)`).
+The arguments _a_ and _b_ are two numbers that are added in the simple task. The parallel task calculates 7 relationships:
+
+* add: a+b
+* sub: a-b
+* mul: a*b
+* div: a/b
+* pow: a**b
+* mod: a%b
+* fdiv: a//b
+
+Each calculation takes `duration` seconds to do.
+
+The argument `wait` defines how long the web api should wait before it request status from the broker and return it as a respons to the request.
+
+## Make
 
 To make things a bit easier, using docker-compose the main functions are wrapped in a makefile:
 
@@ -165,14 +199,77 @@ EXAMPLE:
           using the docker-compose.yml with overrides from docker-compose.prod.yml
 ```
 
-## Try your first post with
+## Celery - Multiprocessing
 
-```bash
-curl -X POST localhost/start_simple_task -H "Content-Type: application/json" -d '{"duration": 1, "a":2.0, "b":3}'
+The main goal with this project was to test whether or not one could trigger multiprocess tasks from _one_ celery task.
+It appear to work, but not straight out of the box:
+
+Firstly, it looks like the tasks are ran as deamons, and apparantly deamonic processes are not allowed to have children. Hence, the code:
+
+```python
+@worker_process_init.connect
+def fix_multiprocessing(**kwargs):
+    current_process()._config['daemon'] = False
 ```
+
+Secondly, using the nativ serialization (pickling) of arguments does not work. Hence, the methods that are called as `delayed` methods need to be wrapped with:
+
+```python
+from joblib import wrap_non_picklable_objects
+
+...
+
+@wrap_non_picklable_objects
+```
+
+See [joblib documentation](https://joblib.readthedocs.io/en/latest/auto_examples/serialization_and_wrappers.html) for more info on the topic.
+
+Two different methods (process and thread) seems to work, using joblib:
+
+```python
+    r = Parallel(n_jobs=-1)(delayed(_calculate)(o, a, b, duration) for o in operations)
+```
+
+or
+
+```python
+    with parallel_backend('threading'):
+       r = Parallel(n_jobs=-1)(delayed(_calculate)(o, a, b, duration) for o in operations)
+```
+
+Another approach seemed to work while I developed this project, but now I get this error - don't know why:
+
+```python
+    with Pool() as p:
+        r = p.map(partial(_calculate, duration=duration, a=a, b=b), operations)
+```
+
+Results in:
+>TypeError: Pickling an AuthenticationString object is disallowed for security reasons
+
+
+## Docker compose - different environments
+Docker and docker-compose are used to build and run this project. To have different development and production environments, one core `docker-compose.yml` file is used together with one of the two override files: `docker-compose.dev.yml` or `docker-compose.prod.yml`.
+The main reason for having two environments is that I wanted to make the services update (restar) on code changes.
+To manage this, the service containers are built with the `volume` key to share the source folders with the containers, and then the service is started with a `--reload` flag (for the web api) or with `watchgod`.
+
+We don't want this behaviour in production, therefore we omit the `volume`-keys and start without reload. Also, for the web api, we prefer `gunicorn` in place of `uvicorn` (based on FASTapi documentation).
+
+Another difference is that we, in production, doesn't expose all ports. See [Security, section exposing only needed ports](#Exposing only needed ports)section.
+
+## Redis - Warnings and binding
+When using the official image `redis:6.2-alpine` out of the box one get some warnings:
+>WARNING overcommit_memory is set to 0! Background save may fail under low memory condition.
+
+The files `./redis/init.sh` and `./redis/.sysctl.conf` handles this and sets `vm.overcommit_memory=1`.
+
+>Warning: no config file specified, using the default config.
+
+The file `./redis/redis.conf` is added so that you can add custom configs. The file used is the same as [this one](https://raw.githubusercontent.com/redis/redis/6.2/redis.conf).
 
 ## Security
 
+First of all; I'm not a security expert. But some things worth mentioning...
 ### Non-root users
 
 Non-root users are running the services in the docker files, according to [this post](https://medium.com/@mccode/processes-in-containers-should-not-run-as-root-2feae3f0df3b).
