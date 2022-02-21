@@ -125,7 +125,7 @@ The file `./redis/redis.conf` is added so that you can add custom configs. The f
 
 The following picture describes the flow between services:
 
-![Architecture](./_misc/services.png)
+![Architecture](./_misc/Services.PNG)
 
 ## Theres a makefile here!
 
