@@ -214,14 +214,10 @@ In dev everything is exposed to the host, for debugging purposes.
 ## Considerations
 
 * Consider to shange Dockerfile(s) so that pip install is not done by root, but instead create a virtual environment and install as normal user - less chance of messing up any python dependencies already in the image.
-* Add ngingx on top of Gunicorn and add some ssl (https):
-
+* Add ngingx on top of Gunicorn and add some ssl (https).
+* Consider Redis Persistence to keep results, even though the service goes down: [](https://redis.io/topics/persistence)
+* Consider adding different networks for the different services (nginx in front; api and flower in middle; redis and celery_worker in back)
 
 ## TODO (or consider)
 
-* [ ] Write this md
-* [ ] consider Redis Persistence to keep results, even though the service goes down:
-https://redis.io/topics/persistence
-* [ ] read, understand and do adjustments to protect Redis: https://redis.io/topics/security
-* [ ] Network and ports
-* [ ] nginx
+* [ ] Finish this md
