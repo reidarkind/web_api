@@ -241,14 +241,20 @@ or
        r = Parallel(n_jobs=-1)(delayed(_calculate)(o, a, b, duration) for o in operations)
 ```
 
-Another approach seemed to work while I developed this project, but now I get this error - don't know why:
+Another approach is using a Pool object:
 
 ```python
     with Pool() as p:
         r = p.map(partial(_calculate, duration=duration, a=a, b=b), operations)
 ```
 
-Results in:
+But mind you! Import from 'billiard' not ´multiprocessing´. The latter results in:
+´´´python
+# This results in TypeError:
+#from multiprocessing.pool import Pool
+# This works:
+from billiard import Pool
+´´´
 >TypeError: Pickling an AuthenticationString object is disallowed for security reasons
 
 
