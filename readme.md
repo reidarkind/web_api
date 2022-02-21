@@ -3,19 +3,6 @@
 This project demonstrates how FastAPI, Celery, Redis can be used to put to gether services for deploying
 heavy calculations.
 
-**TOC**
-
-* tldr;
-* Project folders and files
-* [Architecture](#Architecture)
-* FastAPI Endpoints
-* Make!
-* Docker compose - different environments
-* Celery - Multiprocessing
-* Redis - Warnings and bindings
-* Security
-* Considerations / further work
-
 ## tldr;
 
 Start services with:
