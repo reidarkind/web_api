@@ -64,7 +64,7 @@ conda activate py310_gen_api
 
 ## Project folders and files
 
-```bash
+```
 gen_api
 │   .env                                     --> containing environment variables
 │   docker-compose.dev.yml                   --> override for development environment
@@ -87,23 +87,23 @@ gen_api
 │   __init__.py
 │
 ├───celery
-│   │   tasks.py                          --> definition of celery tasks, triggering different calculations in ./calc_models
-│   │   worker.py                         --> hardlink to ../api/.worker.py
+│   │   tasks.py                             --> definition of celery tasks, triggering different calculations in ./calc_models
+│   │   worker.py                            --> hardlink to ../api/.worker.py
 │   │   __init__.py
 │   │
 │   └───calc_models
-│       calculate.py                      --> The calculation "models" are developed here.
+│       calculate.py                         --> The calculation "models" are developed here.
 │       __init__.py
 │
 ├───redis
-│       init.sh                           --> changed redis config (memory handling) and startup of redis
-│       redis.conf                        --> (unchanged from default) redis config file.
-│       sysctl.conf                       --> redis config, memory handling
+│       init.sh                              --> changed redis config (memory handling) and startup of redis
+│       redis.conf                           --> (unchanged from default) redis config file.
+│       sysctl.conf                          --> redis config, memory handling
 │
 └───_misc
-        api architecture.pptx             --> Powerpoint used to create the Services.PNG
-        Endpoints.PNG                     --> image embedded in this readme.md
-        Services.PNG                      --> image embedded in this readme.md
+        api architecture.pptx                --> Powerpoint used to create the Services.PNG
+        Endpoints.PNG                        --> image embedded in this readme.md
+        Services.PNG                         --> image embedded in this readme.md
 ```
 
 
