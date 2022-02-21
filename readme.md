@@ -99,6 +99,8 @@ gen_api
 │       sysctl.conf                       --> redis config, memory handling
 │
 └───_misc
+        api architecture.pptx             --> Powerpoint used to create the Services.PNG
+        Endpoints.PNG                     --> image embedded in this readme.md
         Services.PNG                      --> image embedded in this readme.md
 ```
 
