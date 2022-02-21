@@ -1,0 +1,54 @@
+version: "3.8"
+
+services:
+
+  api:
+    container_name: api
+    build:
+      context: .
+      dockerfile: DockerfileWebapi
+    volumes:
+      - ./api:/api
+    environment:
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
+    ports:
+      - 8080:8080
+    restart: always
+
+  redis:
+    container_name: redis
+    # image: redis:6.2-alpine
+    build:
+      context: .
+      dockerfile: DockerfileRedis
+    command: sh -c "./init.sh"
+    privileged: true
+
+  celery_worker:
+    container_name: celery_worker
+    build:
+      context: .
+      dockerfile: DockerfileCelery
+    environment:
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
+      - PRODUCTION=false
+    depends_on:
+      - api
+      - redis
+
+  flower:
+    container_name: flower
+    build:
+      #might not need a image as big as this
+      context: .
+      dockerfile: DockerfileCelery
+    #command: bash -c "celery -A tasks:celery_app flower --port=5555"
+    environment:
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
+    depends_on:
+      - api
+      - redis
+      - celery_worker

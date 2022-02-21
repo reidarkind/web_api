@@ -1,0 +1,33 @@
+version: "3.8"
+
+services:
+
+  api:
+    command: bash -c "uvicorn main:app --host 0.0.0.0 --port 8080 --reload"
+    # remove when in production
+    volumes:
+      - ./api:/api
+    restart: always
+
+  celery_worker:
+    # credit: https://github.com/samuelcolvin/watchgod/issues/59
+    command: watchgod celery.__main__.main --args -A tasks:celery_app  worker --loglevel=info
+    build:
+      args:
+        - PRODUCTION=false
+    volumes:
+      - ./celery:/celery
+
+  flower:
+    command: watchgod celery.__main__.main --args -A tasks:celery_app flower --port=5555
+    build:
+      args:
+        - PRODUCTION=false
+    volumes:
+      - ./celery:/celery
+    ports:
+      - 5555:5555
+
+  redis:
+    ports:
+      - 6379:6379

@@ -1,0 +1,26 @@
+version: "3.8"
+
+services:
+
+  api:
+    command: bash -c "gunicorn --bind 0.0.0.0:8080 main:app -w 4 -k uvicorn.workers.UvicornWorker"
+    restart: on-failure:3
+
+  redis:
+    restart: on-failure:3
+
+  celery_worker:
+    restart: on-failure:3
+    build:
+      args:
+        - PRODUCTION=true
+    command: celery -A tasks:celery_app  worker --loglevel=info
+
+  flower:
+    restart: on-failure:3
+    build:
+      args:
+        - PRODUCTION=true
+    command: celery -A tasks:celery_app flower --port=5555
+    expose:
+      - 5555

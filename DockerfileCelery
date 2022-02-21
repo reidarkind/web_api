@@ -1,0 +1,25 @@
+ARG PRODUCTION
+
+FROM python:3.10.0-slim-buster as prod-true
+ENV PYTHONUNBUFFERED=1
+
+# add a non-root user
+RUN groupadd -g 999 appuser && \
+    useradd -r -u 999 -g appuser appuser
+
+WORKDIR /api
+COPY requirementsCelery.txt requirementsCelery.txt
+RUN pip install --no-cache-dir --upgrade -r requirementsCelery.txt
+
+# install watchgod if not in production
+FROM prod-true as prod-false
+COPY requirementsCelerydev.txt requirementsCelerydev.txt
+RUN pip install  --no-cache-dir --upgrade -r requirementsCelerydev.txt
+
+FROM prod-${PRODUCTION} as final
+COPY ./celery /celery
+
+WORKDIR /celery
+
+USER appuser
+

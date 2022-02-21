@@ -1,0 +1,14 @@
+FROM python:3.10.0-slim-buster
+ENV PYTHONUNBUFFERED=1
+# add a non-root user
+RUN groupadd -g 999 appuser && \
+    useradd -r -u 999 -g appuser appuser
+
+COPY requirementsWebapi.txt requirementsWebapi.txt
+RUN pip install --no-cache-dir --upgrade -r requirementsWebapi.txt
+
+COPY ./api /api
+
+WORKDIR /api
+
+USER appuser

@@ -1,0 +1,7 @@
+# according to: https://r-future.github.io/post/how-to-fix-redis-warnings-with-docker/
+FROM redis:6.2-alpine
+WORKDIR /redis
+COPY ./redis/redis.conf /usr/local/etc/redis/redis.conf
+COPY ./redis/sysctl.conf /etc/sysctl.conf
+COPY ./redis/init.sh ./
+RUN chmod +x init.sh
